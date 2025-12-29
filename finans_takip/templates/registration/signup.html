@@ -1,0 +1,190 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kayıt Ol - Finansio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .signup-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        .logo-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 5px;
+        }
+        .logo-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            border: 1px solid #fcc;
+        }
+        .error-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .error-list li {
+            margin-bottom: 4px;
+        }
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        .help-text {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+        .help-text a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .help-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="logo">
+            <div class="logo-icon">F</div>
+            <div class="logo-title">Finansio</div>
+            <div class="logo-subtitle">Kişisel Finans Uygulaması</div>
+        </div>
+        
+        {% if form.errors %}
+            <div class="error-message">
+                <ul class="error-list">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+        
+        <form method="post" action="{% url 'signup' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Kullanıcı Adı</label>
+                <input type="text" name="username" id="id_username" required autofocus>
+                <small style="color: #666; font-size: 12px;">150 karakter veya daha az. Harf, rakam ve @/./+/-/_ karakterleri kullanılabilir.</small>
+            </div>
+            <div class="form-group">
+                <label for="id_email">E-posta (Opsiyonel)</label>
+                <input type="email" name="email" id="id_email">
+            </div>
+            <div class="form-group">
+                <label for="id_password1">Şifre</label>
+                <input type="password" name="password1" id="id_password1" required>
+                <small style="color: #666; font-size: 12px;">Şifreniz diğer kişisel bilgilerinizle çok benzer olamaz, en az 8 karakter içermeli ve tamamen sayısal olamaz.</small>
+            </div>
+            <div class="form-group">
+                <label for="id_password2">Şifre Tekrar</label>
+                <input type="password" name="password2" id="id_password2" required>
+            </div>
+            <button type="submit" class="btn">Kayıt Ol</button>
+        </form>
+        
+        <div class="help-text">
+            Zaten hesabınız var mı? <a href="{% url 'login' %}">Giriş Yap</a>
+        </div>
+    </div>
+</body>
+</html>
+

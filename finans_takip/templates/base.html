@@ -1,0 +1,164 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finansio</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{% static 'finans_takip/styles.css' %}" />
+  </head>
+  <script>
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const toggle = document.getElementById("darkModeToggle");
+      if (!toggle) return;
+
+      const applyTheme = (isDark) => {
+        document.body.setAttribute("data-theme", isDark ? "dark" : "light");
+      };
+
+      // sayfa yüklenince checkbox durumuna göre uygula
+      applyTheme(toggle.checked);
+
+      toggle.addEventListener("change", async () => {
+        // 1) anında uygula
+        applyTheme(toggle.checked);
+
+        // 2) DB'ye kaydet
+        try {
+          const csrftoken = getCookie("csrftoken");
+          const res = await fetch("{% url 'tema_kaydet' %}", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrftoken,
+            },
+            body: JSON.stringify({ dark_mode: toggle.checked }),
+          });
+
+          if (!res.ok) {
+            console.warn("Tema kaydı başarısız:", res.status);
+          }
+        } catch (e) {
+          console.warn("Tema kaydı hatası:", e);
+        }
+      });
+    });
+  </script>
+
+  <body
+    data-theme="{% if request.user.is_authenticated and request.user.profile.dark_mode %}dark{% endif %}"
+    data-csrf-token="{{ csrf_token }}"
+  >
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="logo">
+          <span class="logo-icon">F</span>
+          <div>
+            <div class="logo-title">Finansio</div>
+            <div class="logo-subtitle">Kişisel Finans Uygulaması</div>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <a
+            class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+            href="{% url 'dashboard' %}"
+            >Anasayfa</a
+          >
+          <a
+            class="nav-item {% if request.resolver_match.url_name == 'harcama_ekle' %}active{% endif %}"
+            href="{% url 'harcama_ekle' %}"
+            >Harcamalar</a
+          >
+          <a
+            class="nav-item {% if request.resolver_match.url_name == 'raporlar' %}active{% endif %}"
+            href="{% url 'raporlar' %}"
+            >Raporlar</a
+          >
+          <a
+            class="nav-item {% if request.resolver_match.url_name == 'ayarlar' %}active{% endif %}"
+            href="{% url 'ayarlar' %}"
+            >Ayarlar</a
+          >
+        </nav>
+
+        <div class="sidebar-help"></div>
+      </aside>
+
+      <main class="content {% block page_class %}{% endblock %}">
+        {% if messages %}
+        <div class="message-stack">
+          {% for message in messages %}
+          <div class="message message-{{ message.tags }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %} {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+
+    <script>
+      // ✅ CSRF cookie okuma (fetch ile POST atmak için)
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(";").shift();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Ayarlar sayfasında varsa: dark mode toggle
+        const toggle = document.getElementById("darkModeToggle");
+        if (!toggle) return;
+
+        const applyTheme = (isDark) => {
+          document.body.setAttribute("data-theme", isDark ? "dark" : "light");
+        };
+
+        // Sayfa yüklenince mevcut checkbox durumunu uygula
+        applyTheme(toggle.checked);
+
+        // Değişince anında uygula + (varsa) backend'e kaydet
+        toggle.addEventListener("change", async () => {
+          applyTheme(toggle.checked);
+
+          // Eğer backend endpoint'in varsa kaydedelim:
+          // urls.py'de name="tema_kaydet" olan path eklediysen çalışır.
+          try {
+            const csrftoken = getCookie("csrftoken");
+            const res = await fetch("{% url 'tema_kaydet' %}", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+              },
+              body: JSON.stringify({ dark_mode: toggle.checked }),
+            });
+
+            // Endpoint yoksa veya hata varsa sadece UI değişmiş olsun:
+            if (!res.ok) {
+              // sessiz geç
+              // console.warn("Tema kaydı başarısız:", res.status);
+            }
+          } catch (e) {
+            // Endpoint tanımlı değilse burası hata verebilir; UI yine çalışır
+            // console.warn("Tema kaydı hatası:", e);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

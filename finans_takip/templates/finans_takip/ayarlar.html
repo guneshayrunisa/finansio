@@ -1,0 +1,515 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<div class="page-dashboard">
+  <div class="header-row">
+    <div class="greeting">
+      <h2 style="color: #16277c; margin-bottom: 6px">Ayarlar</h2>
+      <small style="color: rgba(20, 35, 90, 0.7)"
+        >Profilini ve uygulama tercihlerini yönet</small
+      >
+    </div>
+  </div>
+
+  {% if messages %}
+  <div
+    style="margin-top: 12px; display: flex; flex-direction: column; gap: 10px"
+  >
+    {% for message in messages %}
+    <div
+      style="
+          padding: 10px 12px;
+          border-radius: 10px;
+          background: {% if message.tags == 'success' %}rgba(0, 160, 90, 0.10){% elif message.tags == 'error' %}rgba(176, 0, 32, 0.10){% else %}rgba(30, 60, 114, 0.08){% endif %};
+          color: {% if message.tags == 'success' %}#007a45{% elif message.tags == 'error' %}#b00020{% else %}#1e3c72{% endif %};
+          font-weight: 600;
+          font-size: 13px;
+        "
+    >
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <style>
+    /* Bu sayfaya özel kompakt UI */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .settings-card {
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(18, 31, 77, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .settings-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f1f60;
+      letter-spacing: 0.2px;
+    }
+
+    .settings-subtitle {
+      margin: 6px 0 12px 0;
+      font-size: 12.5px;
+      color: rgba(20, 35, 90, 0.7);
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: rgba(20, 35, 90, 0.65);
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      outline: none;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: rgba(30, 60, 114, 0.45);
+      box-shadow: 0 0 0 4px rgba(30, 60, 114, 0.1);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .btn-primary-soft {
+      background: #1e3c72;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 13px;
+      min-width: 160px;
+    }
+
+    .btn-primary-soft:hover {
+      filter: brightness(1.05);
+    }
+
+    .btn-secondary-soft {
+      background: rgba(30, 60, 114, 0.1);
+      color: #1e3c72;
+      padding: 10px 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 13px;
+      text-align: center;
+      border: 1px solid rgba(30, 60, 114, 0.15);
+      min-width: 160px;
+    }
+
+    .btn-secondary-soft:hover {
+      background: rgba(30, 60, 114, 0.14);
+    }
+
+    .hint-box {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(30, 60, 114, 0.06);
+      border: 1px solid rgba(30, 60, 114, 0.1);
+      color: rgba(20, 35, 90, 0.85);
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+
+    .hint-box b {
+      color: #1e3c72;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .toggle-row span {
+      font-weight: 800;
+      color: rgba(20, 35, 90, 0.85);
+      font-size: 13px;
+    }
+
+    /* Mobil */
+    @media (max-width: 980px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+      .actions {
+        justify-content: stretch;
+      }
+      .btn-primary-soft,
+      .btn-secondary-soft {
+        width: 100%;
+        min-width: 0;
+      }
+    }
+    /* Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.18);
+      border-radius: 999px;
+      transition: 0.2s ease;
+      cursor: pointer;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.2s ease;
+      box-shadow: 0 6px 16px rgba(18, 31, 77, 0.2);
+    }
+
+    /* Açıkken */
+    .switch input:checked + .slider {
+      background: rgba(30, 60, 114, 0.95);
+      border-color: rgba(30, 60, 114, 0.35);
+    }
+
+    .switch input:checked + .slider::before {
+      left: 23px;
+    }
+
+    /* Focus (klavye ile erişilebilirlik) */
+    .switch input:focus + .slider {
+      box-shadow: 0 0 0 4px rgba(30, 60, 114, 0.14);
+    }
+
+    body[data-theme="dark"] .settings-card {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+
+    body[data-theme="dark"] .settings-title,
+    body[data-theme="dark"] .toggle-row span {
+      color: rgba(255, 255, 255, 0.92) !important;
+    }
+
+    body[data-theme="dark"] .settings-subtitle,
+    body[data-theme="dark"] small {
+      color: rgba(255, 255, 255, 0.65) !important;
+    }
+
+    body[data-theme="dark"] .toggle-row {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    body[data-theme="dark"] .field input,
+    body[data-theme="dark"] .field select {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-color: rgba(255, 255, 255, 0.12) !important;
+      color: rgba(255, 255, 255, 0.92) !important;
+    }
+  </style>
+
+  <div class="settings-grid">
+    <!-- SOL: Profil + Tercihler -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <!-- Profil -->
+      <div class="settings-card">
+        <h3 class="settings-title">Profil</h3>
+        <div class="settings-subtitle">
+          Kullanıcı adı ve e-posta bilgilerini güncelle
+        </div>
+
+        <form method="post" action="{% url 'ayarlar' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_profile" />
+
+          <div class="field-row">
+            <div class="field">
+              <label>Kullanıcı Adı</label>
+              <input
+                type="text"
+                name="username"
+                value="{{ user_obj.username }}"
+              />
+            </div>
+            <div class="field">
+              <label>Aylık Gelir (₺)</label>
+              <input
+                type="text"
+                name="monthly_income"
+                value="{{ monthly_income|floatformat:2 }}"
+                placeholder="Örn: 25000"
+              />
+            </div>
+            <div class="field">
+              <label>E-posta</label>
+              <input
+                type="email"
+                value="{{ user_obj.email }}"
+                readonly
+                style="
+                  background: rgba(0, 0, 0, 0.04);
+                  cursor: not-allowed;
+                  color: rgba(20, 35, 90, 0.85);
+                "
+              />
+              <small
+                style="
+                  font-size: 12px;
+                  color: rgba(20, 35, 90, 0.6);
+                  font-weight: 600;
+                "
+              >
+              </small>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary-soft">
+              Profili Güncelle
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Tercihler -->
+      <div class="settings-card">
+        <h3 class="settings-title">Tercihler</h3>
+        <div
+          class="toggle-row"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 12px;
+          "
+        >
+          <div>
+            <div style="font-weight: 700">Karanlık Mod</div>
+            <div style="font-size: 12px; color: var(--muted)">
+              Gece kullanımında göz yormaz
+            </div>
+          </div>
+
+          <label class="switch">
+            <input
+              id="darkModeToggle"
+              type="checkbox"
+              {%
+              if
+              request.user.profile.dark_mode
+              %}checked{%
+              endif
+              %}
+            />
+
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="settings-subtitle">Uygulama kullanım tercihleri</div>
+
+        <form method="post" action="{% url 'ayarlar' %}">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_preferences" />
+
+          <div class="toggle-row">
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <span>E-posta bildirimleri açık olsun</span>
+              <small
+                style="
+                  font-size: 12px;
+                  color: rgba(20, 35, 90, 0.65);
+                  font-weight: 600;
+                "
+              >
+                Önemli bildirimleri mail olarak al
+              </small>
+            </div>
+
+            <label class="switch" aria-label="E-posta bildirimleri">
+              <input type="checkbox" name="notify_email" />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div style="height: 10px"></div>
+
+          <div class="field">
+            <label>Varsayılan Para Birimi</label>
+            <select name="currency">
+              <option value="TRY" selected>TRY (₺)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+            </select>
+          </div>
+
+          <div class="actions">
+            <button type="submit" class="btn-primary-soft">
+              Tercihleri Kaydet
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SAĞ: Güvenlik (kompakt) -->
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div class="settings-card">
+        <h3 class="settings-title">Güvenlik</h3>
+        <div class="settings-subtitle">Şifre yönetimi ve hesap güvenliği</div>
+
+        <a href="{% url 'password_change' %}" class="btn-secondary-soft"
+          >Şifre Değiştir</a
+        >
+
+        <div class="hint-box">
+          <b>İpucu:</b> Güçlü şifre için en az 8 karakter kullan; büyük/küçük
+          harf, sayı ve sembol ekle.
+        </div>
+      </div>
+
+      <div class="settings-card" style="padding: 14px">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+          "
+        >
+          <div>
+            <div style="font-weight: 900; color: #0f1f60; font-size: 14px">
+              Hesap Bilgisi
+            </div>
+            <div
+              style="
+                font-size: 12.5px;
+                color: rgba(20, 35, 90, 0.7);
+                margin-top: 4px;
+              "
+            >
+              Kullanıcı: <b>{{ user_obj.username }}</b>
+            </div>
+          </div>
+          <div
+            style="
+              background: rgba(30, 60, 114, 0.08);
+              border: 1px solid rgba(30, 60, 114, 0.1);
+              color: #1e3c72;
+              font-weight: 900;
+              padding: 8px 10px;
+              border-radius: 999px;
+              font-size: 12px;
+              white-space: nowrap;
+            "
+          >
+            Aktif
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  (function () {
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(";").shift();
+      return null;
+    }
+
+    const toggle = document.getElementById("darkModeToggle");
+    if (!toggle) return;
+
+    // Sayfa açılır açılmaz tema uygula
+    document.body.setAttribute("data-theme", toggle.checked ? "dark" : "light");
+
+    toggle.addEventListener("change", async () => {
+      // 1) Anında UI değişsin
+      document.body.setAttribute(
+        "data-theme",
+        toggle.checked ? "dark" : "light"
+      );
+
+      // 2) DB’ye kaydet (AJAX)
+      try {
+        const res = await fetch("{% url 'tema_kaydet' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({ dark_mode: toggle.checked }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Tema kaydedilemedi. HTTP: " + res.status);
+        }
+      } catch (e) {
+        alert("Tema kaydedilirken hata oldu: " + e.message);
+      }
+    });
+  })();
+</script>
+
+{% endblock %}

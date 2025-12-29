@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Harcama Ekle</h1>
+    <p class="page-subtitle">Yeni bir harcama veya kategori ekleyin</p>
+  </div>
+</div>
+
+<div class="layout-grid pro-grid">
+  <!-- SOL: Form alanı -->
+  <section class="card">
+    <div class="card-head">
+      <div>
+        <h3 class="card-title">Hızlı Harcama</h3>
+        <p class="card-subtitle">2 adımda ekle • canlı özet sağda güncellenir</p>
+      </div>
+    </div>
+
+    <!-- Kategori ekleme formu -->
+    <div class="section-block">
+      <div class="section-title">Kategori</div>
+
+      <form method="post" class="input-row">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="kategori_ekle" />
+
+        <input
+          class="input"
+          name="kategori_adi"
+          type="text"
+          placeholder="örn: Yemek, Giyim, Ulaşım"
+        />
+
+        <button class="btn btn-ghost" type="submit">Kategori Ekle</button>
+      </form>
+    </div>
+
+    <!-- Harcama ekleme formu -->
+    <div class="section-block">
+      <div class="section-title">Harcama</div>
+
+      <form method="post" class="stack">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="islem_ekle" />
+
+        <div class="grid-2">
+          <div class="field">
+            <label class="label">Tutar</label>
+            <div class="input-wrap">
+              <span class="prefix">₺</span>
+              <input
+                class="input input-pad"
+                name="miktar"
+                id="miktar-input"
+                type="number"
+                step="0.01"
+                placeholder="0,00"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Kategori</label>
+            <select class="input" name="kategori" id="kategori-select">
+              {% for kategori in kategoriler %}
+              <option
+                value="{{ kategori.pk }}"
+                data-aylik-toplam="{{ kategori.aylik_toplam|default:0 }}"
+              >
+                {{ kategori.ad }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div class="field">
+            <label class="label">Tarih</label>
+            <input
+              class="input"
+              type="date"
+              name="tarih"
+              id="tarih-input"
+              value="{{ bugun|date:'Y-m-d' }}"
+              required
+            />
+          </div>
+
+          <div class="field">
+            <label class="label">Hafta</label>
+            <select class="input" name="hafta" id="hafta-select">
+              {% for hafta in haftalik_veri %}
+              <option value="{{ forloop.counter }}">
+                {{ forloop.counter }}. Hafta
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label class="label">Açıklama</label>
+            <input
+              class="input"
+              name="aciklama"
+              id="aciklama-input"
+              type="text"
+              placeholder="Açıklama (opsiyonel)"
+            />
+            <small id="aciklama-oneri" class="hint"></small>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" type="submit">Ekle</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- SAĞ: Canlı özet paneli -->
+  <aside class="card sticky">
+    <div class="card-head">
+      <div>
+        <h3 class="card-title">Canlı Özet</h3>
+        <p class="card-subtitle">Tutar/kategori seçimine göre anlık</p>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Bu hafta toplam</div>
+        <div class="mini-bar"></div>
+        <div class="metric-value">
+          <span id="ozet-hafta" data-base="{{ bu_hafta_toplam }}">
+            {{ bu_hafta_toplam|floatformat:2 }}
+          </span>
+          ₺
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Bu kategoride bu ay</div>
+        <div class="mini-bar"></div>
+        <div class="metric-value">
+          <span id="ozet-kategori">
+            {{ ilk_kategori_aylik|floatformat:2 }}
+          </span>
+          ₺
+        </div>
+      </div>
+
+      <div class="metric metric-strong">
+        <div class="metric-label">Bu ekleme sonrası</div>
+        <div class="mini-bar"></div>
+        <div class="metric-value">
+          <span id="ozet-yeni-toplam">
+            {{ bu_hafta_toplam|floatformat:2 }}
+          </span>
+          ₺
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <p class="muted">
+      İpucu: Büyük harcamalarda açıklama önerisi otomatik gelir.
+    </p>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const miktarInput = document.getElementById("miktar-input");
+  const kategoriSelect = document.getElementById("kategori-select");
+  const aciklamaInput = document.getElementById("aciklama-input");
+  const oneriSpan = document.getElementById("aciklama-oneri");
+
+  // Canlı özet span'leri
+  const haftaOzetSpan = document.getElementById("ozet-hafta");
+  const kategoriOzetSpan = document.getElementById("ozet-kategori");
+  const yeniToplamSpan = document.getElementById("ozet-yeni-toplam");
+
+  // Haftalık baz değer (mevcut hafta toplamı)
+  const haftaBase =
+    parseFloat(
+      (haftaOzetSpan?.dataset.base || "0").toString().replace(",", ".")
+    ) || 0;
+
+  function guncelleAciklamaOnerisi() {
+    const miktar =
+      parseFloat((miktarInput.value || "").toString().replace(",", ".")) || 0;
+    const kategoriText =
+      kategoriSelect.options[
+        kategoriSelect.selectedIndex
+      ]?.text.toLowerCase() || "";
+
+    let oneri = "";
+
+    if (kategoriText.includes("yemek") || kategoriText.includes("kahve")) {
+      oneri = "Öğle yemeği";
+    } else if (kategoriText.includes("market")) {
+      oneri = "Market alışverişi";
+    } else if (
+      kategoriText.includes("ulaşım") ||
+      kategoriText.includes("benzin")
+    ) {
+      oneri = "Ulaşım gideri";
+    } else if (kategoriText.includes("fatura")) {
+      oneri = "Aylık fatura ödemesi";
+    }
+
+    if (miktar > 500 && !kategoriText.includes("fatura")) {
+      oneri = "Büyük harcama";
+    }
+
+    if (oneri) {
+      oneriSpan.textContent = "💡 Öneri: " + oneri;
+      if (!aciklamaInput.value) {
+        aciklamaInput.placeholder = oneri;
+      }
+    } else {
+      oneriSpan.textContent = "";
+      aciklamaInput.placeholder = "Açıklama (opsiyonel)";
+    }
+  }
+
+  function guncelleOzetPanel() {
+    const miktar =
+      parseFloat((miktarInput.value || "").toString().replace(",", ".")) || 0;
+
+    const seciliOption = kategoriSelect.options[kategoriSelect.selectedIndex];
+    // option üzerinde data-aylik-toplam var → JS tarafında dataset.aylikToplam
+    const kategoriAylikBase =
+      parseFloat((seciliOption?.dataset.aylikToplam || "0").toString()) || 0;
+
+    // Bu kategoride bu ay (mevcut değer)
+    kategoriOzetSpan.textContent = kategoriAylikBase.toFixed(2);
+
+    // Bu ekleme sonrası hafta toplamı
+    const yeniToplam = haftaBase + miktar;
+    yeniToplamSpan.textContent = yeniToplam.toFixed(2);
+  }
+
+  // Eventler
+  miktarInput.addEventListener("input", function () {
+    guncelleAciklamaOnerisi();
+    guncelleOzetPanel();
+  });
+
+  kategoriSelect.addEventListener("change", function () {
+    guncelleAciklamaOnerisi();
+    guncelleOzetPanel();
+  });
+
+  // Sayfa ilk açıldığında başlangıç durumu
+  guncelleAciklamaOnerisi();
+  guncelleOzetPanel();
+</script>
+{% endblock %}
